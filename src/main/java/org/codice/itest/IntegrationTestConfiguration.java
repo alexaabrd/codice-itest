@@ -1,27 +1,28 @@
 /**
  * Copyright (c) Codice Foundation
-
+ * <p>
  * This is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation, either version 3 of the License, or any later version.
-
+ * <p>
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details. A copy of the GNU Lesser General Public License is distributed along with this program and can be found at
  * http://www.gnu.org/licenses/lgpl.html.
  */
 package org.codice.itest;
 
-import org.codice.itest.api.IntegrationTest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.stream.Stream;
+
+import org.codice.itest.api.IntegrationTest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class IntegrationTestConfiguration {
@@ -40,7 +41,7 @@ public class IntegrationTestConfiguration {
      */
     @Bean
     public ExecutorService executorService() {
-        return Executors.newFixedThreadPool(threads);
+        return Executors.newFixedThreadPool(threads, new DaemonThreadFactory());
     }
 
     /**
@@ -57,5 +58,14 @@ public class IntegrationTestConfiguration {
         return diagnosticTestList.stream()
                 .filter(t -> testNameList.contains(t.getClass().getName()))
                 .sorted(Comparator.comparingInt(t -> testNameList.indexOf(t.getClass().getName())));
+    }
+
+    public class DaemonThreadFactory implements ThreadFactory {
+        @Override
+        public Thread newThread(final Runnable r) {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
+        }
     }
 }
